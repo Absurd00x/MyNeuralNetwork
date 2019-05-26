@@ -16,8 +16,8 @@ class NeuralNetwork:
         self.lrate = learning_grate
         self.wih = np.random.normal(0.0, pow(self.hnodes, -0.5), (self.hnodes, self.inodes))
         self.who = np.random.normal(0.0, pow(self.onodes, -0.5), (self.onodes, self.hnodes))
-        self.af = lambda x: scipy.special.expit(x)
-        self.af_inv = lambda x: scipy.special.logit(x)
+        self.af = scipy.special.expit
+        self.af_inv = scipy.special.logit
 
     def train(self, inputs_list, targets_list):
         # Прогоняем входные данные через сеть
