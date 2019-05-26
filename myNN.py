@@ -1,24 +1,14 @@
 import numpy as np
 import scipy.special
 
-sigma = scipy.special.expit
-
-
-def sigma_derivative(x):
-    return sigma(x) * (1 - sigma(x))
-
 
 class NeuralNetwork:
-    def __init__(self, in_nodes, hidden_nodes, out_nodes, learning_grate,
-                 activation=sigma, inverse_activation=scipy.special.logit,
-                 activation_derivative=sigma_derivative):
+    def __init__(self, in_nodes, hidden_nodes, out_nodes, learning_grate):
         '''
         :param in_nodes: Количество входных вершин
         :param hidden_nodes: Количество скрытых вершин
         :param out_nodes: Количество выходных вершин
         :param learning_grate: Коэффициент обучения
-        :param activation: Функция активации нейрона ( по умолчанию - сигмоида )
-        :param activation_derivative: Производная от функции активации нейрона
         '''
         self.inodes = in_nodes
         self.hnodes = hidden_nodes
@@ -26,9 +16,8 @@ class NeuralNetwork:
         self.lrate = learning_grate
         self.wih = np.random.normal(0.0, pow(self.hnodes, -0.5), (self.hnodes, self.inodes))
         self.who = np.random.normal(0.0, pow(self.onodes, -0.5), (self.onodes, self.hnodes))
-        self.af = np.vectorize(activation)
-        self.af_der = np.vectorize(activation_derivative)
-        self.af_inv = np.vectorize(inverse_activation)
+        self.af = lambda x: scipy.special.expit(x)
+        self.af_inv = lambda x: scipy.special.logit(x)
 
     def train(self, inputs_list, targets_list):
         # Прогоняем входные данные через сеть
@@ -49,8 +38,10 @@ class NeuralNetwork:
 
         output_errors = targets - final_outputs
         hidden_errors = np.dot(self.who.T, output_errors)
-        self.who += self.lrate * np.dot((output_errors * self.af_der(final_outputs)), hidden_outputs.T)
-        self.wih += self.lrate * np.dot((hidden_errors * self.af_der(hidden_outputs)), inputs.T)
+        self.who += self.lrate * np.dot(
+            output_errors * final_outputs * (1 - final_outputs), np.transpose(hidden_outputs))
+        self.wih += self.lrate * np.dot(
+            hidden_errors * hidden_outputs * (1 - hidden_outputs), np.transpose(inputs))
 
     def query(self, inputs_list):
         # Транспонируем исходную матрицу
